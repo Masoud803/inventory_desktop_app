@@ -30,7 +30,10 @@ app.get('/', (req, res) => {
 });
 
 // Authentication routes
-require('./routes/auth.routes')(app); // <<--- YEH LINE ADD KARO
+require('./routes/auth.routes')(app);
+
+// User test routes for authorization
+require('./routes/user.routes')(app);
 
 // Yahan hum apne baaki routes (users, products, etc.) ko require karenge baad mein
 
