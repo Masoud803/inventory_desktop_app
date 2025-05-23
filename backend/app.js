@@ -2,6 +2,7 @@
 
 const express = require('express');
 const app = express();
+const cors = require('cors'); // <<--- 1. CORS ko require karo
 const PORT = process.env.PORT || 3001; // Backend server is port pe chalega
 
 // Middleware to parse JSON request bodies
@@ -28,6 +29,23 @@ db.sequelize.sync() // For now, no { force: true }
 app.get('/', (req, res) => {
   res.json({ message: "Welcome to the Inventory Management System backend!" });
 });
+
+
+// <<--- 2. CORS Middleware ko yahan use karo (saare routes se pehle)
+app.use(cors()); 
+// Default options sab origins ko allow karengi. Hum isko specific bhi kar sakte hain:
+// app.use(cors({ origin: 'http://localhost:5173' })); // Sirf frontend ko allow karne ke liye
+
+// Middleware to parse JSON request bodies
+app.use(express.json());
+// Middleware to parse URL-encoded request bodies
+app.use(express.urlencoded({ extended: true }));
+
+// Basic test route
+app.get('/', (req, res) => {
+  res.json({ message: "Welcome to the Inventory Management System backend!" });
+});
+
 
 // Authentication routes
 require('./routes/auth.routes')(app);
