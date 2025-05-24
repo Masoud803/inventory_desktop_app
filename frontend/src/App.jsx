@@ -15,8 +15,10 @@ import SalesPage from './pages/SalesPage';
 import RecycleBinPage from './pages/RecycleBinPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
-import LoginPage from './pages/LoginPage'; // <<--- Import LoginPage
-import SignupPage from './pages/SignupPage'; // <<--- Import SignupPage
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ProfilePage from './pages/ProfilePage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth(); // Get auth status from context
@@ -53,6 +55,8 @@ function App() {
         <Route path="/recycle-bin" element={<ProtectedRoute><RecycleBinPage /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
 
         <Route
           path="/"

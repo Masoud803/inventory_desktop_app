@@ -1,13 +1,15 @@
 // inventory-app/backend/middleware/authJwt.js
 const jwt = require("jsonwebtoken");
 const config = require("../config/auth.config.js");
-const db = require("../models");
-const User = db.user;
+// const db = require("../models");
+// const User = db.user;
 
 verifyToken = (req, res, next) => {
   let token = req.headers["x-access-token"];
+  console.log("AUTHJWT: Received token:", token);
 
   if (!token) {
+    console.log("AUTHJWT: No token provided!");
     return res.status(403).send({
       message: "No token provided!"
     });
@@ -15,10 +17,12 @@ verifyToken = (req, res, next) => {
 
   jwt.verify(token, config.secret, (err, decoded) => {
     if (err) {
+      console.error("AUTHJWT: Unauthorized! Token verification failed:", err.message);
       return res.status(401).send({
         message: "Unauthorized!"
       });
     }
+    console.log("AUTHJWT: Token verified. Decoded ID:", decoded.id, "Decoded Role:", decoded.role);
     req.userId = decoded.id; // Save user id from token to request object
     req.username = decoded.username; // Save username from token to request object
     req.userRole = decoded.role; // Save user role from token to request object

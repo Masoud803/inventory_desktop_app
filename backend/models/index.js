@@ -19,8 +19,40 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // Yahan hum apne models ko import aur initialize karenge (e.g., User model)
+// Importing user models
 db.user = require("./user.model.js")(sequelize, Sequelize); 
-// Abhi ke liye User model wali line ko comment rakhte hain, jab tak hum user.model.js file nahi banate.
+//Importing website model
+db.website = require("./website.model.js")(sequelize, Sequelize);
+// Importing supplier model
+db.supplier = require("./supplier.model.js")(sequelize, Sequelize);
+// Importing category model
+db.category = require("./category.model.js")(sequelize, Sequelize);
+
+// Define Many-to-Many relationship between Website and Supplier
+// This will create a junction table e.g., 'website_suppliers'
+db.website.belongsToMany(db.supplier, {
+  through: "website_suppliers", // Name of the junction table
+  as: "suppliers", // Alias to access suppliers from website instance
+  foreignKey: "website_id",
+});
+db.supplier.belongsToMany(db.website, {
+  through: "website_suppliers", // Must be the same junction table name
+  as: "websites", // Alias to access websites from supplier instance
+  foreignKey: "supplier_id",
+});
+
+// Define Associations for Category:
+// 1. Category belongs to ONE Website (One-to-Many: Website has Many Categories)
+db.website.hasMany(db.category, { as: "categories", foreignKey: { name: 'website_id', allowNull: false }, onDelete: 'RESTRICT' });
+db.category.belongsTo(db.website, {
+  as: "website",
+  foreignKey: { name: 'website_id', allowNull: false }
+});
+
+// 2. Category can have a Parent Category (Self-referencing for sub-categories)
+// A category can have one parent, and a parent can have many children.
+db.category.belongsTo(db.category, { as: 'parentCategory', foreignKey: 'parent_id', allowNull: true, onDelete: 'SET NULL' });
+db.category.hasMany(db.category, { as: 'subCategories', foreignKey: 'parent_id', allowNull: true });
 
 // Test database connection
 sequelize.authenticate()
