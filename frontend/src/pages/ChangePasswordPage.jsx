@@ -122,33 +122,3 @@ const ChangePasswordPage = () => {
 };
 
 export default ChangePasswordPage;
-
-
-
-
-// // frontend/src/pages/ChangePasswordPage.jsx
-// import React from 'react';
-// import Typography from '@mui/material/Typography';
-// import Box from '@mui/material/Box';
-// import Paper from '@mui/material/Paper';
-// // TODO: Import TextField, Button, Alert from MUI for the form
-// // TODO: useState for form fields and errors
-// // TODO: useAuth to get token for API call
-
-// const ChangePasswordPage = () => {
-//   // TODO: Implement password change form and logic
-//   // It will need fields for: Current Password, New Password, Confirm New Password
-//   // And an API call to a backend endpoint like /api/auth/change-password 
-//   // (We need to create this backend endpoint later)
-
-//   return (
-//     <Box sx={{p:3}}>
-//       <Typography variant="h4" gutterBottom>Change Password</Typography>
-//       <Paper sx={{p:2}}>
-//         <Typography variant="body1">Password change form will be here.</Typography>
-//         {/* Placeholder for form elements */}
-//       </Paper>
-//     </Box>
-//   );
-// };
-// export default ChangePasswordPage;

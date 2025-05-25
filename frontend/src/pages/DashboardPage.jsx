@@ -1,27 +1,29 @@
 // frontend/src/pages/DashboardPage.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; // Added useCallback
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid'; // For layout
-import Paper from '@mui/material/Paper'; // For cards
+// import Paper from '@mui/material/Paper'; // Not directly used by StatCard if Card is used
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardActions from '@mui/material/CardActions';
 import Button from '@mui/material/Button';
-import Link from '@mui/material/Link'; // For navigation links
+// import Link from '@mui/material/Link'; // Not directly used, RouterLink is used
 import { Link as RouterLink } from 'react-router-dom'; // For React Router navigation
-import { useAuth } from '../contexts/AuthContext'; // Adjust path
+import { useAuth } from '../contexts/AuthContext'; // Adjust path if needed
+import CircularProgress from '@mui/material/CircularProgress'; // For loading state
+import Alert from '@mui/material/Alert'; // For error display
 
-// Example Icons (optional, but make it look nice)
+// Example Icons
 import WebIcon from '@mui/icons-material/Web';
 import PeopleIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
-import InventoryIcon from '@mui/icons-material/Inventory'; // For Products (future)
-import PointOfSaleIcon from '@mui/icons-material/PointOfSale'; // For POS/Sales (future)
+import InventoryIcon from '@mui/icons-material/Inventory'; 
+import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 
-// Helper component for stat cards
+// Helper component for stat cards (yeh waise hi rahega jaisa tumne diya tha)
 const StatCard = ({ title, count, icon, linkTo }) => (
-  <Card sx={{ minWidth: 200, textAlign: 'center' }} elevation={3}>
+  <Card sx={{ minWidth: 180, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} elevation={3}>
     <CardContent>
       {icon && React.cloneElement(icon, { sx: { fontSize: 40, mb: 1, color: 'primary.main' } })}
       <Typography sx={{ fontSize: 16 }} color="text.secondary" gutterBottom>
@@ -32,7 +34,7 @@ const StatCard = ({ title, count, icon, linkTo }) => (
       </Typography>
     </CardContent>
     {linkTo && (
-      <CardActions sx={{ justifyContent: 'center' }}>
+      <CardActions sx={{ justifyContent: 'center', pt: 0 }}>
         <Button size="small" component={RouterLink} to={linkTo}>View All</Button>
       </CardActions>
     )}
@@ -41,101 +43,112 @@ const StatCard = ({ title, count, icon, linkTo }) => (
 
 
 const DashboardPage = () => {
-  const { token, user } = useAuth();
-  // We'll fetch actual counts later when APIs are ready and we have data
+  const { token } = useAuth(); // User object yahan zaroori nahi agar sirf counts dikha rahe hain
   const [websiteCount, setWebsiteCount] = useState(0);
   const [supplierCount, setSupplierCount] = useState(0);
   const [categoryCount, setCategoryCount] = useState(0);
-  const [productCount, setProductCount] = useState(0); // Placeholder for future
+  const [productCount, setProductCount] = useState(0); // State for product count
+  const [loading, setLoading] = useState(true); // Single loading state for all counts
+  const [error, setError] = useState('');     // Single error state
 
-  // Fetch counts when component mounts (Example)
-  useEffect(() => {
-    if (token) {
-      // Fetch Website Count
-      fetch('http://localhost:3001/api/websites', { headers: { 'x-access-token': token }})
-        .then(res => res.json())
-        .then(data => setWebsiteCount(Array.isArray(data) ? data.length : 0))
-        .catch(() => setWebsiteCount(0));
+  // useCallback for fetching all counts together
+  const fetchDashboardData = useCallback(async () => {
+    if (!token) {
+      setError("Please login to view dashboard data.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(''); // Clear previous errors
 
-      // Fetch Supplier Count
-      fetch('http://localhost:3001/api/suppliers', { headers: { 'x-access-token': token }})
-        .then(res => res.json())
-        .then(data => setSupplierCount(Array.isArray(data) ? data.length : 0))
-        .catch(() => setSupplierCount(0));
-      
-      // Fetch Category Count
-      fetch('http://localhost:3001/api/categories', { headers: { 'x-access-token': token }})
-        .then(res => res.json())
-        .then(data => setCategoryCount(Array.isArray(data) ? data.length : 0))
-        .catch(() => setCategoryCount(0));
-        
-      // TODO: Fetch Product count when product module is ready
+    try {
+      const headers = { 'x-access-token': token };
+      // Fetch all counts in parallel
+      const responses = await Promise.all([
+        fetch('http://localhost:3001/api/websites', { headers }),
+        fetch('http://localhost:3001/api/suppliers', { headers }),
+        fetch('http://localhost:3001/api/categories', { headers }),
+        fetch('http://localhost:3001/api/products', { headers }) // Fetch products
+      ]);
+
+      // Process responses
+      const websitesData = responses[0].ok ? await responses[0].json() : [];
+      const suppliersData = responses[1].ok ? await responses[1].json() : [];
+      const categoriesData = responses[2].ok ? await responses[2].json() : [];
+      const productsData = responses[3].ok ? await responses[3].json() : []; // Process products response
+
+      setWebsiteCount(Array.isArray(websitesData) ? websitesData.length : 0);
+      setSupplierCount(Array.isArray(suppliersData) ? suppliersData.length : 0);
+      setCategoryCount(Array.isArray(categoriesData) ? categoriesData.length : 0);
+      setProductCount(Array.isArray(productsData) ? productsData.length : 0); // Set product count
+
+    } catch (err) {
+      console.error("Failed to fetch dashboard data:", err);
+      setError("Could not load some dashboard data. Please try again later.");
+      // Reset counts on error to avoid showing stale data
+      setWebsiteCount(0);
+      setSupplierCount(0);
+      setCategoryCount(0);
+      setProductCount(0);
+    } finally {
+      setLoading(false);
     }
   }, [token]);
 
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]); // useEffect will run when fetchDashboardData (which depends on token) changes
+
 
   return (
-    <Box sx={{p:3}}> {/* Added padding to the main Box of DashboardPage */}
+    <Box sx={{p:3}}> 
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
         Dashboard
       </Typography>
       
-      <Grid container spacing={3}>
-        {/* Website Stat Card */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Websites" count={websiteCount} icon={<WebIcon />} linkTo="/websites" />
-        </Grid>
+      {error && <Alert severity="error" sx={{mb:2}}>{error}</Alert>}
 
-        {/* Supplier Stat Card */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Suppliers" count={supplierCount} icon={<PeopleIcon />} linkTo="/suppliers" />
+      {loading ? (
+        <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh'}}>
+            <CircularProgress />
+            <Typography sx={{ml:2}}>Loading Dashboard...</Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Total Websites" count={websiteCount} icon={<WebIcon />} linkTo="/websites" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Total Suppliers" count={supplierCount} icon={<PeopleIcon />} linkTo="/suppliers" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Total Categories" count={categoryCount} icon={<CategoryIcon />} linkTo="/categories" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Total Products" count={productCount} icon={<InventoryIcon />} linkTo="/products" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+             <Card sx={{ minWidth: 180, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: 'secondary.light' }} elevation={3}>
+              <CardContent>
+                  <PointOfSaleIcon sx={{ fontSize: 40, mb: 1, color: 'secondary.contrastText' }} />
+                  <Typography sx={{ fontSize: 16, color: 'secondary.contrastText' }} gutterBottom>
+                      Point of Sale
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{color: 'secondary.contrastText'}}>
+                      New Sale
+                  </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: 'center', pt:0 }}>
+                  <Button size="small" component={RouterLink} to="/pos" sx={{color: 'secondary.contrastText'}}>
+                      Go to POS
+                  </Button>
+              </CardActions>
+             </Card>
+          </Grid>
         </Grid>
-
-        {/* Category Stat Card */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Categories" count={categoryCount} icon={<CategoryIcon />} linkTo="/categories" />
-        </Grid>
-        
-        {/* Product Stat Card (Placeholder for future) */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Products" count={productCount} icon={<InventoryIcon />} linkTo="/products" />
-        </Grid>
-
-        {/* Add more cards or sections as needed */}
-        {/* For example, a card for quick POS access */}
-        <Grid item xs={12} sm={6} md={3}>
-           <Card sx={{ minWidth: 200, textAlign: 'center', backgroundColor: 'secondary.light' }} elevation={3}> {/* Example different style */}
-            <CardContent>
-                <PointOfSaleIcon sx={{ fontSize: 40, mb: 1, color: 'secondary.contrastText' }} />
-                <Typography sx={{ fontSize: 16, color: 'secondary.contrastText' }} gutterBottom>
-                    Point of Sale
-                </Typography>
-                <Typography variant="h5" component="div" sx={{color: 'secondary.contrastText'}}>
-                    New Sale
-                </Typography>
-            </CardContent>
-            <CardActions sx={{ justifyContent: 'center' }}>
-                <Button size="small" component={RouterLink} to="/pos" sx={{color: 'secondary.contrastText'}}> {/* Assuming /pos route for POS page */}
-                    Go to POS
-                </Button>
-            </CardActions>
-           </Card>
-        </Grid>
-      </Grid>
-
-      {/* TODO: Add other dashboard elements like:
-          - Recent Sales (Table/List)
-          - Quick Actions (Buttons to Add Product, Add Category etc.)
-          - Charts for sales/inventory (when data is available)
-      */}
+      )}
+      {/* TODO: Add other dashboard elements */}
     </Box>
   );
 };
-
 export default DashboardPage;
-
-
-// // frontend/src/pages/DashboardPage.jsx
-// import Typography from '@mui/material/Typography';
-// const DashboardPage = () => <Typography variant="h4">Dashboard Page</Typography>;
-// export default DashboardPage;
