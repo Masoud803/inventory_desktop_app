@@ -32,7 +32,7 @@ app.use(express.urlencoded({ extended: true })); // for parsing application/x-ww
 
 // --- Database Setup ---
 const db = require("./models"); // Hamara models/index.js
-db.sequelize.sync() // For now, no { force: true }
+db.sequelize.sync({ alter: true }) // For now, no { force: true }
   .then(() => {
     console.log("Database synced successfully. Tables should be ready.");
     // Yahan hum initial data (like Super Admin) add karne ka function call kar sakte hain agar zaroorat ho
@@ -57,6 +57,7 @@ require('./routes/website.routes')(app);
 require('./routes/supplier.routes')(app);
 require('./routes/category.routes')(app);
 require('./routes/product.routes')(app); // Ensure product routes are included here
+require('./routes/stockmovement.routes')(app);
 
 // Yahan pehle comment tha "Yahan hum apne baaki routes (users, products, etc.) ko require karenge baad mein"
 // Ab humne saare current routes (auth, user, website, supplier, category, product) include kar diye hain.
