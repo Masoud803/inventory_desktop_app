@@ -19,14 +19,18 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // Yahan hum apne models ko import aur initialize karenge (e.g., User model)
+// Importing user models
 db.user = require("./user.model.js")(sequelize, Sequelize); 
+//Importing website model
 db.website = require("./website.model.js")(sequelize, Sequelize);
+// Importing supplier model
 db.supplier = require("./supplier.model.js")(sequelize, Sequelize);
+// Importing category model
 db.category = require("./category.model.js")(sequelize, Sequelize);
+//Product, Variation, Accessory models
 db.product = require("./product.model.js")(sequelize, Sequelize);
 db.variation = require("./variation.model.js")(sequelize, Sequelize);
 db.accessory = require("./accessory.model.js")(sequelize, Sequelize);
-db.stock_movement = require("./stockmovement.model.js")(sequelize, Sequelize);
 
 // Define Many-to-Many relationship between Website and Supplier
 // This will create a junction table e.g., 'website_suppliers'
@@ -73,37 +77,6 @@ db.variation.belongsTo(db.product, { as: "product", foreignKey: { name: 'product
 // Product (if 'customisable' type) has MANY Accessories
 db.product.hasMany(db.accessory, { as: "accessories", foreignKey: { name: 'product_id', allowNull: false }, onDelete: 'CASCADE' });
 db.accessory.belongsTo(db.product, { as: "product", foreignKey: { name: 'product_id', allowNull: false }});
-
-
-// --- Associations for StockMovement ---
-db.stock_movement.belongsTo(db.product, { as: "product", foreignKey: 'productId', allowNull: true });
-db.product.hasMany(db.stock_movement, { as: "stockMovementsAsProduct", foreignKey: 'productId', allowNull: true, onDelete: 'SET NULL' }); // Changed alias for clarity
-
-db.stock_movement.belongsTo(db.variation, { as: "variation", foreignKey: 'variationId', allowNull: true });
-db.variation.hasMany(db.stock_movement, { as: "stockMovements", foreignKey: 'variationId', allowNull: true, onDelete: 'SET NULL' });
-
-db.stock_movement.belongsTo(db.accessory, { as: "accessory", foreignKey: 'accessoryId', allowNull: true });
-db.accessory.hasMany(db.stock_movement, { as: "stockMovements", foreignKey: 'accessoryId', allowNull: true, onDelete: 'SET NULL' });
-
-db.stock_movement.belongsTo(db.user, { as: "user", foreignKey: 'userId', allowNull: true }); // 'as: "user"' is important for include
-db.user.hasMany(db.stock_movement, { as: "initiatedStockMovements", foreignKey: 'userId', allowNull: true });
-
-// Product
-// db.product.hasMany(db.stock_movement, { as: "stockMovements", foreignKey: 'productId', allowNull: true, onDelete: 'SET NULL' });
-// db.stock_movement.belongsTo(db.product, { as: "product", foreignKey: 'productId', allowNull: true });
-
-// // Variation
-// db.variation.hasMany(db.stock_movement, { as: "stockMovements", foreignKey: 'variationId', allowNull: true, onDelete: 'SET NULL' });
-// db.stock_movement.belongsTo(db.variation, { as: "variation", foreignKey: 'variationId', allowNull: true });
-
-// // Accessory <<--- ADD/ENSURE THIS ASSOCIATION ---<<
-// db.accessory.hasMany(db.stock_movement, { as: "stockMovements", foreignKey: 'accessoryId', allowNull: true, onDelete: 'SET NULL' });
-// db.stock_movement.belongsTo(db.accessory, { as: "accessory", foreignKey: 'accessoryId', allowNull: true });
-
-// // User
-// db.user.hasMany(db.stock_movement, { foreignKey: 'userId', allowNull: true }); 
-// db.stock_movement.belongsTo(db.user, { as:"user", foreignKey: 'userId' });
-
 
 // Test database connection
 sequelize.authenticate()
